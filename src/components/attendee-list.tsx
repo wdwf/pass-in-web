@@ -11,8 +11,47 @@ import { Table } from "./table/table";
 import { TableHeader } from "./table/table-header";
 import { TableCell } from "./table/table-cell";
 import { TableRow } from "./table/table-row";
+import { ChangeEvent, useState } from "react";
+import { attendees } from "../data/attendees";
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
+dayjs.locale("pt-br");
 
 export function AttendeeList() {
+  const [inputSearch, setInputSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const totalAttendeens = Math.ceil(attendees.length / 10);
+
+  function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
+    setInputSearch(event.target.value);
+  }
+
+  function goToFirstPage() {
+    setPage(1);
+  }
+
+  function goToLastPage() {
+    setPage(totalAttendeens);
+  }
+
+  function goToPreviousPage() {
+    if (page === 1) {
+      return;
+    }
+    setPage(page - 1);
+  }
+
+  function goToNextPage() {
+    if (page === totalAttendeens) {
+      return;
+    }
+    setPage(page + 1);
+  }
+
   return (
     <div className='flex flex-col gap-4'>
       <div className='flex gap-3 items-center'>
@@ -22,7 +61,9 @@ export function AttendeeList() {
           <input
             type='text'
             placeholder='Buscar participante...'
-            className='bg-transparent flex-1 outline-none border-0 p-0 text-sm'
+            className='bg-transparent flex-1 outline-none border-0 p-0 text-sm focus:ring-0'
+            onChange={onSearchInputChanged}
+            value={inputSearch}
           />
         </div>
       </div>
@@ -44,30 +85,27 @@ export function AttendeeList() {
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: 8 }).map((_, index: number) => {
+          {attendees.slice((page - 1) * 10, page * 10).map((user) => {
             return (
-              <TableRow key={index}>
+              <TableRow key={user.id}>
                 <TableCell>
                   <input
                     type='checkbox'
                     className='size-4 bg-black/20 rounded border border-white/10 text-orange-400 focus:ring-offset-0 focus:ring-orange-300 focus:ring-opacity-50'
                   />
                 </TableCell>
-                <TableCell>52716</TableCell>
+                <TableCell>{user.id}</TableCell>
                 <TableCell>
                   <div className='flex flex-col gap-1'>
                     <span className='font-semibold text-whitek'>
-                      Jorginho Redshild Barcelo
+                      {user.name}
                     </span>
-                    <span>Jorginho@email.com</span>
+                    <span>{user.email}</span>
                   </div>
                 </TableCell>
-                <TableCell>7 dias atrás</TableCell>
-                <TableCell>3 dias atrás</TableCell>
+                <TableCell>{dayjs().to(user.createdAt)}</TableCell>
+                <TableCell>{dayjs().to(user.checkedInAt)}</TableCell>
                 <TableCell>
-                  {/* <button className='bg-black/20 border border-white/10 rounded-md p-1.5'>
-                      <MoreHorizontal className='size-4' />
-                    </button> */}
                   <IconButton transparent>
                     <MoreHorizontal className='size-4' />
                   </IconButton>
@@ -78,21 +116,31 @@ export function AttendeeList() {
         </tbody>
         <tfoot>
           <tr>
-            <TableCell colSpan={3}>Mostrando 10 de 228 itens</TableCell>
+            <TableCell colSpan={3}>
+              Mostrando 10 de {attendees.length} itens
+            </TableCell>
             <TableCell className='text-right' colSpan={3}>
               <div className='inline-flex items-center gap-8'>
-                <span>Página 1 de 23</span>
+                <span>
+                  Página {page} de {totalAttendeens}
+                </span>
                 <div className='flex gap-1.5'>
-                  <IconButton>
+                  <IconButton onClick={goToFirstPage} disabled={page === 1}>
                     <ChevronsLeft className='size-4' />
                   </IconButton>
-                  <IconButton>
+                  <IconButton onClick={goToPreviousPage} disabled={page === 1}>
                     <ChevronLeft className='size-4' />
                   </IconButton>
-                  <IconButton>
+                  <IconButton
+                    onClick={goToNextPage}
+                    disabled={page === totalAttendeens}
+                  >
                     <ChevronRight className='size-4' />
                   </IconButton>
-                  <IconButton>
+                  <IconButton
+                    onClick={goToLastPage}
+                    disabled={page === totalAttendeens}
+                  >
                     <ChevronsRight className='size-4' />
                   </IconButton>
                 </div>
