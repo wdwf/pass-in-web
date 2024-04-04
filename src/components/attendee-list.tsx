@@ -12,6 +12,7 @@ import { TableHeader } from "./table/table-header";
 import { TableCell } from "./table/table-cell";
 import { TableRow } from "./table/table-row";
 import { ChangeEvent, useEffect, useState } from "react";
+import { listFakeAttendees } from "../data/attendees";
 
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
@@ -53,21 +54,29 @@ export function AttendeeList() {
   const totalAttendeens = Math.ceil(total / 10);
 
   useEffect(() => {
-    const url = new URL(
-      "http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees"
-    );
+    const fetchData = async () => {
+      try {
+        const url = new URL(
+          "http://localhost:3333/events/9e9bd979-9d10-4915-b339-3786b1634f33/attendees"
+        );
 
-    url.searchParams.set("pageIndex", String(page - 1));
-    if (inputSearch.length > 0) {
-      url.searchParams.set("query", inputSearch);
-    }
+        url.searchParams.set("pageIndex", String(page - 1));
+        if (inputSearch.length > 0) {
+          url.searchParams.set("query", inputSearch);
+        }
 
-    fetch(url)
-      .then((response) => response.json())
-      .then((data) => {
+        const response = await fetch(url);
+        const data = await response.json();
+
         setAttendees(data.attendees);
         setTotal(data.total);
-      });
+      } catch (error) {
+        setAttendees(listFakeAttendees);
+        setTotal(listFakeAttendees.length);
+      }
+    };
+
+    fetchData();
   }, [page, inputSearch]);
 
   function setCurrentSearch(search: string) {
